@@ -25,11 +25,18 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     private let flutterMethodPlayMusicSpeaker = "playMusicSpeaker"
     private let flutterMethodPlayMusicMuted = "playMusicMuted"
     private let flutterMethodSetMusicVolume = "setMusicVolume"
+    var registrar: FlutterPluginRegistrar? = nil
+
+    
+    
+    
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "audioset", binaryMessenger: registrar.messenger())
         let instance = SwiftAudiosetPlugin()
         registrar.addMethodCallDelegate(instance, channel: channel)
+         instance.registrar = registrar
+        //registar ma problem hoy toh flutter assets no path na ave!!!!
     }
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
@@ -38,7 +45,10 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         
         // Method Added
         case flutterMethodPlayMusic:
+            
+           
             let arguments = call.arguments as! NSDictionary
+             print(arguments)
             let asset =  arguments["asset"] as! String
             let type =  arguments["type"] as! String
             let musicFile = arguments["file"] as! Int
@@ -60,7 +70,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let musicVolume = arguments["volume"] as! Int
             self.setMusicVolume(player:musicFile == 1 ? player : player2,volume: musicVolume == 1 ? .Increase : .Decrease)
-            
+           // 2 pr click krj
         // case "play":
         //     let arguments = call.arguments as! NSDictionary
            
@@ -83,26 +93,36 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         //  case "muteVolume":
         //    self.volum
         default:
-            self.log(message: "Unknown method called on Native Audio Player channel.")
+            print ("Unknown method called on Native Audio Player channel.")
         }
     }
     
 
     func playMusic(strResource:String, type:String,musicFile:Int){
-        let path = Bundle.main.path(forResource: strResource, ofType : type)!
-        let url = URL(fileURLWithPath : path)
-        do {
-            if musicFile == 1 {
-                player = try AVAudioPlayer(contentsOf: url)
-                player?.play()
-            } else {
-                player2 = try AVAudioPlayer(contentsOf: url)
-                player2?.play()
-            }
+        //var registar : FlutterPluginRegistrar? = nil
+        // Prblm ena pchi ave che
+        let key = registrar?.lookupKey(forAsset:  strResource)
+        if let path = Bundle.main.path(forResource: key, ofType : nil) {
+            let url = URL(fileURLWithPath : path)
             
-        } catch {
-            print ("There is an issue with this code!")
+            do {
+                if musicFile == 1 {
+                    player = try AVAudioPlayer(contentsOf: url)
+                    player?.play()
+                } else {
+                    player2 = try AVAudioPlayer(contentsOf: url)
+                    player2?.play()
+                }
+
+            } catch {
+                print ("There is an issue with this code!")
+            }
+        } else {
+            print("Path Not Found")
         }
+        
+    
+        
     }
     
     // func playMusicSpeaker(i: Float, player:AVAudioPlayer?, speakerSide:Speaker) {
@@ -111,7 +131,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     //     }
     // }
 
-    func playMusicSpeaker(speakerSide:speakerSide,musicFile:musicFile) {
+    func playMusicSpeaker(speakerSide:Speaker.RawValue,musicFile: Int) {
         if musicFile == 1{
                 if let player = player, player.isPlaying {
                         player.pan = speakerSide

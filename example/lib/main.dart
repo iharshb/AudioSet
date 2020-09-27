@@ -4,6 +4,8 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:audioset/audioset.dart';
 
+import 'custom_button.dart';
+
 void main() {
   runApp(MyApp());
 }
@@ -19,38 +21,105 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await Audioset.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
+//    initPlatformState();
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Plugin example app'),
-        ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+      home: HomePage(),
+    );
+  }
+}
+
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  Audioset audioset = Audioset();
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("HOME"),
+      ),
+      body: Container(
+        child: Column(
+          children: [
+            CustomButton(
+              text: "Play 1",
+              onTap: () {
+                audioset.plaMusic("assets/sounds/bear.mp3", 1);
+                //   audioset.setMusicSide(0.0, 1);
+              },
+            ),
+
+            // And path pn get kre j che iOS ma
+            CustomButton(
+              text: "Play 2",
+              onTap: () {
+                audioset.plaMusic("assets/sounds/bear.mp3", 2);
+              },
+            ),
+
+            // And path pn get kre j che iOS ma
+            CustomButton(
+              text: "Play Bo Mp3",
+              onTap: () {
+                audioset.plaMusic("assets/sounds/bear.mp3", 1);
+                audioset.plaMusic("assets/sounds/nat.mp3", 2);
+              },
+            ),
+
+            CustomButton(
+              text: "Speaker Left Both",
+              onTap: () {
+                audioset.setMusicSide(-1.0, 1);
+                audioset.setMusicSide(-1.0, 2);
+              },
+            ),
+
+            CustomButton(
+              text: "Speaker Right BOTH",
+              onTap: () {
+                audioset.setMusicSide(1.0, 1);
+                audioset.setMusicSide(1.0, 2);
+              },
+            ),
+
+            CustomButton(
+              text: "Speaker Both Files",
+              onTap: () {
+                audioset.setMusicSide(0.0, 1);
+                audioset.setMusicSide(0.0, 2);
+              },
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: CustomButton(
+                    text: "Volume Increase File 1",
+                    onTap: () {
+                      audioset.setVolume(1, 1);
+                    },
+                  ),
+                ),
+                Flexible(
+                  child: CustomButton(
+                    text: "Volume Decrease File 1 ",
+                    onTap: () {
+                      audioset.setVolume(1, 0);
+                    },
+                  ),
+                ),
+              ],
+            )
+          ],
         ),
       ),
     );
