@@ -25,11 +25,10 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     private let flutterMethodPlayMusicSpeaker = "playMusicSpeaker"
     private let flutterMethodPlayMusicMuted = "playMusicMuted"
     private let flutterMethodSetMusicVolume = "setMusicVolume"
-    var registrar: FlutterPluginRegistrar? = nil
-
-    
-    
-    
+    private let flutterMethodSetMusicPaused = "playMusicPaused"
+    private let flutterMethodSetMusicResumed = "playMusicResumed"
+    private let flutterMethodSetMusicStop = "playMusicStop" 
+    var registrar: FlutterPluginRegistrar? = nil   
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "audioset", binaryMessenger: registrar.messenger())
@@ -52,13 +51,14 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let asset =  arguments["asset"] as! String
             let type =  arguments["type"] as! String
             let musicFile = arguments["file"] as! Int
-            self.playMusic(strResource: asset, type: type,musicFile: musicFile)
+            let isRepeat = arguments["isRepeat"] as! Bool
+            self.playMusic(strResource: asset, type: type,musicFile: musicFile,,isRepeat:isRepeat)
 
         case flutterMethodPlayMusicSpeaker:
             let arguments = call.arguments as! NSDictionary
             let speakerSide =  arguments["speakerSide"] as! Float
             let musicFile = arguments["file"] as! Int
-            self.playMusicSpeaker(speakerSide:speakerSide,musicFile:musicFile) 
+            self.playMusicSpeaker(player:musicFile == 1 ? player : player2,speakerSide:speakerSide) 
             
         case flutterMethodPlayMusicMuted:
             let arguments = call.arguments as! NSDictionary
@@ -69,7 +69,23 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             let musicVolume = arguments["volume"] as! Int
-            self.setMusicVolume(player:musicFile == 1 ? player : player2,volume: musicVolume == 1 ? .Increase : .Decrease)
+            self.setMusicVolume(player:musicFile == 1 ? player : player2,volume: musicVolume)
+
+        case flutterMethodSetMusicPaused:
+            let arguments = call.arguments as! NSDictionary
+            let musicFile = arguments["file"] as! Int
+            self.playMusicPaused(player:musicFile == 1 ? player : player2)
+
+        case flutterMethodSetMusicResumed:
+            let arguments = call.arguments as! NSDictionary
+            let musicFile = arguments["file"] as! Int
+            self.playMusicResumed(player:musicFile == 1 ? player : player2)
+        
+        case flutterMethodSetMusicStop:
+            let arguments = call.arguments as! NSDictionary
+            let musicFile = arguments["file"] as! Int
+            self.playMusicStop(player:musicFile == 1 ? player : player2)
+
            // 2 pr click krj
         // case "play":
         //     let arguments = call.arguments as! NSDictionary
@@ -98,7 +114,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     }
     
 
-    func playMusic(strResource:String, type:String,musicFile:Int){
+    func playMusic(strResource:String, type:String,musicFile:Int,isRepeat:Bool){
         //var registar : FlutterPluginRegistrar? = nil
         // Prblm ena pchi ave che
         let key = registrar?.lookupKey(forAsset:  strResource)
@@ -107,10 +123,26 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             
             do {
                 if musicFile == 1 {
+                    if let player = player, player.isPlaying {
+                            self.playMusicStop(player:player)
+                    }
                     player = try AVAudioPlayer(contentsOf: url)
+                    if isRepeat {
+                        player.numberOfLoops = 100
+                    } else {
+                        player.numberOfLoops = 1
+                    }
                     player?.play()
                 } else {
+                    if let player2 = player2, player2.isPlaying {
+                            self.playMusicStop(player:player2)
+                    }
                     player2 = try AVAudioPlayer(contentsOf: url)
+                    if isRepeat {
+                        player2.numberOfLoops = 100
+                    } else {
+                        player2.numberOfLoops = 1
+                    }
                     player2?.play()
                 }
 
@@ -131,17 +163,10 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     //     }
     // }
 
-    func playMusicSpeaker(speakerSide:Speaker.RawValue,musicFile: Int) {
-        if musicFile == 1{
-                if let player = player, player.isPlaying {
-                        player.pan = speakerSide
-                }
-        } else {
-            if let player2 = player2, player2.isPlaying {
-                        player2.pan = speakerSide
-                }
+    func playMusicSpeaker(player:AVAudioPlayer?,speakerSide:Speaker.RawValue) {
+        if let player = player, player.isPlaying {
+                player.pan = speakerSide
         }
-        
     }
 
     func playMusicMuted(player:AVAudioPlayer?){
@@ -153,24 +178,43 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             }
         }
     }
+
+    func playMusicPaused(player:AVAudioPlayer?){
+        if let player = player, player.isPlaying {
+                player.pause()
+        }
+    }
+
+    func playMusicResumed(player:AVAudioPlayer?){
+        if let player = player,player.isPlaying {
+                player.play()
+        }
+    }
+
+    func playMusicStop(player:AVAudioPlayer?){
+        if let player = player, player.isPlaying {
+            player.stop()
+        }
+    }
     
     func setMusicVolume(player:AVAudioPlayer?,volume: SpeakerVolume){
         if let player = player, player.isPlaying {
-            if volume == .Increase {
-                print("Player Volume \(player.volume)")
-                if player.volume >= 1.0 {
-                    player.volume = 1.0
-                } else {
-                    player.volume = player.volume + 0.1
-                }
-            } else {
-                print("Player Volume \(player.volume)")
-                if player.volume <= 0.0 {
-                    player.volume = 0.0
-                } else {
-                    player.volume = player.volume - 0.1
-                }
-            }
+            player.volume = SpeakerVolume
+            // if volume == .Increase {
+            //     print("Player Volume \(player.volume)")
+            //     if player.volume >= 1.0 {
+            //         player.volume = 1.0
+            //     } else {
+            //         player.volume = player.volume + 0.1
+            //     }
+            // } else {
+            //     print("Player Volume \(player.volume)")
+            //     if player.volume <= 0.0 {
+            //         player.volume = 0.0
+            //     } else {
+            //         player.volume = player.volume - 0.1
+            //     }
+            // }
         }
     }
     
