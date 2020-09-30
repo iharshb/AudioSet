@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:audioset/audioset.dart';
 
 import 'custom_button.dart';
@@ -105,7 +102,7 @@ class _HomePageState extends State<HomePage> {
                   child: CustomButton(
                     text: "Volume Increase File 1",
                     onTap: () {
-                      audioset.setVolume(1, 1);
+                      //   audioset.setVolume(1, 1);
                     },
                   ),
                 ),
@@ -113,7 +110,51 @@ class _HomePageState extends State<HomePage> {
                   child: CustomButton(
                     text: "Volume Decrease File 1 ",
                     onTap: () {
-                      audioset.setVolume(1, 0);
+                      //  audioset.setVolume(1, 0);
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: CustomButton(
+                    text: "Resume File 1",
+                    onTap: () {
+                      audioset.resume(1);
+                    },
+                  ),
+                ),
+                Flexible(
+                  child: CustomButton(
+                    text: "Pause File 1 ",
+                    onTap: () {
+                      audioset.pause(1);
+                    },
+                  ),
+                ),
+              ],
+            ),
+
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Flexible(
+                  child: CustomButton(
+                    text: "STOP File 1",
+                    onTap: () {
+                      audioset.stop(1);
+                    },
+                  ),
+                ),
+                Flexible(
+                  child: CustomButton(
+                    text: "STOP File 2 ",
+                    onTap: () {
+                      audioset.stop(2);
                     },
                   ),
                 ),

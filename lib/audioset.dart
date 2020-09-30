@@ -7,6 +7,10 @@ class Audioset {
   static const methodPlay = "playMusic";
   static const methodSetMusicSide = "playMusicSpeaker";
   static const nativeMethodSetVolume = "setMusicVolume";
+  static const resumeMethod = "playMusicResumed";
+  static const pauseMethod = "playMusicPaused";
+  static const stopMethod = "playMusicPaused";
+  static const muteMethod = "playMusicMuted";
 
   static const asset = "asset";
   static const type = "type";
@@ -15,6 +19,7 @@ class Audioset {
   static const musicF = "musicFile";
   static const spkSide = "speakerSide";
   static const vol = "volume";
+  static const isRepeat = "isRepeat";
 
   static Future<String> get platformVersion async {
     final String version = await _channel.invokeMethod('getPlatformVersion');
@@ -28,6 +33,7 @@ class Audioset {
         asset: assetPath,
         type: "mp3",
         file: musicFile,
+        isRepeat: true,
       },
     );
   }
@@ -40,6 +46,34 @@ class Audioset {
         spkSide: speakerSide,
         file: musicFile,
       },
+    );
+  }
+
+  void resume(int musicFile) {
+    _invokeNativeMethod(
+      resumeMethod,
+      arguments: <String, dynamic>{file: musicFile},
+    );
+  }
+
+  void pause(int musicFile) {
+    _invokeNativeMethod(
+      pauseMethod,
+      arguments: <String, dynamic>{file: musicFile},
+    );
+  }
+
+  void stop(int musicFile) {
+    _invokeNativeMethod(
+      stopMethod,
+      arguments: <String, dynamic>{file: musicFile},
+    );
+  }
+
+  void mute(int musicFile) {
+    _invokeNativeMethod(
+      muteMethod,
+      arguments: <String, dynamic>{file: musicFile},
     );
   }
 
