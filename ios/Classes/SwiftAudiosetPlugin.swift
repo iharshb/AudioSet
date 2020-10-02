@@ -15,15 +15,22 @@ enum SpeakerVolume {
 
 public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     
+    var audioEngine: AVAudioEngine = AVAudioEngine()
+    var equalizer: AVAudioUnitEQ!
+    var audioPlayerNode: AVAudioPlayerNode = AVAudioPlayerNode()
+    var audioFile: AVAudioFile!
+
     private var player : AVAudioPlayer?
     private var player2 : AVAudioPlayer?
     private let flutterMethodPlayMusic = "playMusic"
+    private let flutterMethodPlayMusicFrequency = "playMusicFrerquency"
     private let flutterMethodPlayMusicSpeaker = "playMusicSpeaker"
     private let flutterMethodPlayMusicMuted = "playMusicMuted"
     private let flutterMethodSetMusicVolume = "setMusicVolume"
     private let flutterMethodSetMusicPaused = "playMusicPaused"
     private let flutterMethodSetMusicResumed = "playMusicResumed"
     private let flutterMethodSetMusicStop = "playMusicStop" 
+    
     var registrar: FlutterPluginRegistrar? = nil   
     
     public static func register(with registrar: FlutterPluginRegistrar) {
@@ -46,6 +53,17 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let isRepeat = arguments["isRepeat"] as! Bool
             self.playMusic(strResource: asset, type: type,musicFile: musicFile,isRepeat:isRepeat)
+        
+        case flutterMethodPlayMusicFrequency:
+            
+            let arguments = call.arguments as! NSDictionary
+             print(arguments)
+            let asset =  arguments["asset"] as! String
+            let type =  arguments["type"] as! String
+            let musicFile = arguments["file"] as! Int
+            let speakerSide =  arguments["speakerSide"] as! Float
+            let frequency = arguments["frequency"] as! [Float]]
+            self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: frequency, pan: speakerSide)
 
         case flutterMethodPlayMusicSpeaker:
             let arguments = call.arguments as! NSDictionary
@@ -164,6 +182,54 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         if let player = player, player.isPlaying {
             player.volume = volume
         }
+    }
+
+
+    // Frequency
+
+    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float){
+//        if audioPlayerNode.isPlaying {
+//            audioPlayerNode.stop()
+//        }
+        self.setFrequncy(freqs: frequency)
+            do {
+                if let filepath = Bundle.main.path(forResource: strResource, ofType: type) {
+                    let filepathURL = NSURL.fileURL(withPath: filepath)
+                    audioFile = try AVAudioFile(forReading: filepathURL)
+                    audioEngine.prepare()
+                    
+                    try audioEngine.start()
+                    audioPlayerNode.scheduleFile(audioFile, at: nil, completionHandler: nil)
+                    audioPlayerNode.play()
+                    audioPlayerNode.pan = pan
+                }
+            } catch _ {
+                print ("There is an issue with this code!")
+            }
+       }
+    
+    func setFrequncy(freqs:[Float]) {
+        self.clearAllData()
+        equalizer = AVAudioUnitEQ(numberOfBands: freqs.count)
+        audioEngine.attach(audioPlayerNode)
+        audioEngine.attach(equalizer)
+        let bands = equalizer.bands
+        audioEngine.connect(audioPlayerNode, to: equalizer, format: nil)
+        audioEngine.connect(equalizer, to: audioEngine.outputNode, format: nil)
+        for i in 0...(bands.count - 1) {
+            bands[i].frequency  = Float(freqs[i])
+            bands[i].bypass     = false
+            bands[i].filterType = .parametric
+        }
+
+        bands[0].gain = -10.0
+        bands[0].filterType = .lowShelf
+    }
+    
+    func clearAllData() {
+        equalizer = AVAudioUnitEQ()
+        audioEngine = AVAudioEngine()
+        audioPlayerNode = AVAudioPlayerNode()
     }
     
 }
