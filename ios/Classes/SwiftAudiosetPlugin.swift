@@ -230,54 +230,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     }
 
 
-    // Frequency
-
-//    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float){
-//        if audioPlayerNode.isPlaying {
-//            audioPlayerNode.stop()
-//        }
-        
-      //  self.setFrequncy(freqs: frequency)
-//            do {
-//                if let filepath = Bundle.main.path(forResource: strResource, ofType: type) {
-//                    let filepathURL = NSURL.fileURL(withPath: filepath)
-//                    audioFile = try AVAudioFile(forReading: filepathURL)
-//                    audioEngine.prepare()
-//
-//                    try audioEngine.start()
-//                    audioPlayerNode.scheduleFile(audioFile, at: nil, completionHandler: nil)
-//                    audioPlayerNode.play()
-//                 //   audioPlayerNode.pan = pan
-//                }
-//            } catch _ {
-//                print ("There is an issue with this code!")
-//            }
-//       }
-    
-//    func setFrequncy(freqs:[Float]) {
-//        self.clearAllData()
-//        equalizer = AVAudioUnitEQ(numberOfBands: freqs.count)
-//        audioEngine.attach(audioPlayerNode)
-//        audioEngine.attach(equalizer)
-//        let bands = equalizer.bands
-//        audioEngine.connect(audioPlayerNode, to: equalizer, format: nil)
-//        audioEngine.connect(equalizer, to: audioEngine.outputNode, format: nil)
-//        for i in 0...(bands.count - 1) {
-//            bands[i].frequency  = Float(freqs[i])
-//            bands[i].bypass     = false
-//            bands[i].filterType = .parametric
-//        }
-//
-//        bands[0].gain = -10.0
-//        bands[0].filterType = .lowShelf
-//    }
-//
-//    func clearAllData() {
-//        equalizer = AVAudioUnitEQ()
-//        audioEngine = AVAudioEngine()
-//        audioPlayerNode = AVAudioPlayerNode()
-//    }
-    
+  
     
     func audioSetup(frequency:[Float],filterType:Int) {
 

@@ -37,7 +37,27 @@ class Audioset {
       },
     );
   }
+
   //1 min
+  void plaFreqMusic(
+      String assetPath, int musicFile, double speakerSide, List frequency) {
+    _invokeNativeMethod(
+      "playMusicFrerquency",
+      arguments: <String, dynamic>{
+        asset: assetPath,
+        type: "mp3",
+        file: musicFile,
+        spkSide: speakerSide,
+        "frequency": frequency
+      },
+    );
+
+//    let asset =  arguments["asset"] as! String
+//    let type =  arguments["type"] as! String
+//    let musicFile = arguments["file"] as! Int
+//    let speakerSide =  arguments["speakerSide"] as! Float
+//    let frequency = arguments["frequency"] as! [Float]
+  }
 
   void setMusicSide(double speakerSide, int musicFile) {
     _invokeNativeMethod(

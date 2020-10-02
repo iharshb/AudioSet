@@ -1,8 +1,8 @@
 name: audioset
-description: A new flutter plugin project.
+description: AudioManager Plugin
 version: 0.0.1
-author:
-homepage:
+author: harshbhavsar011@gmail.com
+homepage: https://github.com/iharshb/AudioSet.git
 
 environment:
   sdk: ">=2.7.0 <3.0.0"

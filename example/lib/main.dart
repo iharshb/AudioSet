@@ -49,8 +49,8 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               text: "Play 1",
               onTap: () {
-                audioset.plaMusic("assets/sounds/bear.mp3", 1);
-                //   audioset.setMusicSide(0.0, 1);
+                audioset.plaFreqMusic("assets/sounds/bear.mp3", 1, 1.0,
+                    [100.0, 500.0, 750.0, 1000, 0]);
               },
             ),
 
