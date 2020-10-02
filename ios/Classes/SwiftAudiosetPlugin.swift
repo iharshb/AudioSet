@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
 import AVFoundation
+import MediaPlayer
 
 enum Speaker : Float {
    case Left = -1
@@ -15,10 +16,19 @@ enum SpeakerVolume {
 
 public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     
-    var audioEngine: AVAudioEngine = AVAudioEngine()
-    var equalizer: AVAudioUnitEQ!
-    var audioPlayerNode: AVAudioPlayerNode = AVAudioPlayerNode()
+//    var audioEngine: AVAudioEngine = AVAudioEngine()
+//    var equalizer: AVAudioUnitEQ!
+//    var audioPlayerNode: AVAudioPlayerNode = AVAudioPlayerNode()
+//    var audioFile: AVAudioFile!
+    
+    var audioEngine: AVAudioEngine!
+    var audioPlayerNode: AVAudioPlayerNode!
     var audioFile: AVAudioFile!
+    var audioUnitEQ = AVAudioUnitEQ(numberOfBands: 10)
+    var isPlaying = false
+
+    //let MAX_GAIN: Float = 24.0
+    //let MIN_GAIN: Float = -96.0
 
     private var player : AVAudioPlayer?
     private var player2 : AVAudioPlayer?
@@ -62,7 +72,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let type =  arguments["type"] as! String
             let musicFile = arguments["file"] as! Int
             let speakerSide =  arguments["speakerSide"] as! Float
-            let frequency = arguments["frequency"] as! [Float]]
+            let frequency = arguments["frequency"] as! [Float]
             self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: frequency, pan: speakerSide)
 
         case flutterMethodPlayMusicSpeaker:
@@ -107,7 +117,6 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         let key = registrar?.lookupKey(forAsset:  strResource)
         if let path = Bundle.main.path(forResource: key, ofType : nil) {
             let url = URL(fileURLWithPath : path)
-            
             do {
                 if musicFile == 1 {
                     if let player = player, player.isPlaying {
@@ -187,49 +196,121 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
 
     // Frequency
 
-    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float){
+//    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float){
 //        if audioPlayerNode.isPlaying {
 //            audioPlayerNode.stop()
 //        }
-        self.setFrequncy(freqs: frequency)
-            do {
-                if let filepath = Bundle.main.path(forResource: strResource, ofType: type) {
-                    let filepathURL = NSURL.fileURL(withPath: filepath)
-                    audioFile = try AVAudioFile(forReading: filepathURL)
-                    audioEngine.prepare()
-                    
-                    try audioEngine.start()
-                    audioPlayerNode.scheduleFile(audioFile, at: nil, completionHandler: nil)
-                    audioPlayerNode.play()
-                    audioPlayerNode.pan = pan
-                }
-            } catch _ {
-                print ("There is an issue with this code!")
-            }
-       }
+        
+      //  self.setFrequncy(freqs: frequency)
+//            do {
+//                if let filepath = Bundle.main.path(forResource: strResource, ofType: type) {
+//                    let filepathURL = NSURL.fileURL(withPath: filepath)
+//                    audioFile = try AVAudioFile(forReading: filepathURL)
+//                    audioEngine.prepare()
+//
+//                    try audioEngine.start()
+//                    audioPlayerNode.scheduleFile(audioFile, at: nil, completionHandler: nil)
+//                    audioPlayerNode.play()
+//                 //   audioPlayerNode.pan = pan
+//                }
+//            } catch _ {
+//                print ("There is an issue with this code!")
+//            }
+//       }
     
-    func setFrequncy(freqs:[Float]) {
-        self.clearAllData()
-        equalizer = AVAudioUnitEQ(numberOfBands: freqs.count)
-        audioEngine.attach(audioPlayerNode)
-        audioEngine.attach(equalizer)
-        let bands = equalizer.bands
-        audioEngine.connect(audioPlayerNode, to: equalizer, format: nil)
-        audioEngine.connect(equalizer, to: audioEngine.outputNode, format: nil)
-        for i in 0...(bands.count - 1) {
-            bands[i].frequency  = Float(freqs[i])
-            bands[i].bypass     = false
-            bands[i].filterType = .parametric
-        }
+//    func setFrequncy(freqs:[Float]) {
+//        self.clearAllData()
+//        equalizer = AVAudioUnitEQ(numberOfBands: freqs.count)
+//        audioEngine.attach(audioPlayerNode)
+//        audioEngine.attach(equalizer)
+//        let bands = equalizer.bands
+//        audioEngine.connect(audioPlayerNode, to: equalizer, format: nil)
+//        audioEngine.connect(equalizer, to: audioEngine.outputNode, format: nil)
+//        for i in 0...(bands.count - 1) {
+//            bands[i].frequency  = Float(freqs[i])
+//            bands[i].bypass     = false
+//            bands[i].filterType = .parametric
+//        }
+//
+//        bands[0].gain = -10.0
+//        bands[0].filterType = .lowShelf
+//    }
+//
+//    func clearAllData() {
+//        equalizer = AVAudioUnitEQ()
+//        audioEngine = AVAudioEngine()
+//        audioPlayerNode = AVAudioPlayerNode()
+//    }
+    
+    
+    func audioSetup(frequency:[Float]) {
 
-        bands[0].gain = -10.0
-        bands[0].filterType = .lowShelf
+       // let FREQUENCY: [Float] = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
+
+        self.audioEngine = AVAudioEngine.init()
+        self.audioPlayerNode = AVAudioPlayerNode.init()
+        self.audioUnitEQ = AVAudioUnitEQ(numberOfBands: frequency.count)
+        self.audioEngine.attach(self.audioPlayerNode)
+        self.audioEngine.attach(self.audioUnitEQ)
+        for i in 0...(frequency.count - 1) {
+            self.audioUnitEQ.bands[i].filterType = .parametric
+            self.audioUnitEQ.bands[i].frequency = frequency[i]
+            self.audioUnitEQ.bands[i].bandwidth = 0.5 // half an octave
+           // let eq = self.value(forKey: String(format: "eq%d", i)) as! UISlider
+            self.audioUnitEQ.bands[i].gain = -10 //eq.value
+            self.audioUnitEQ.bands[i].bypass = false
+        }
+        self.audioUnitEQ.bypass = true
+    }
+
+    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float) {
+
+        self.isPlaying = true
+
+        try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
+        try! AVAudioSession.sharedInstance().setActive(true)
+
+        self.audioSetup(frequency: frequency)
+
+        let key = registrar?.lookupKey(forAsset:  strResource)
+        let path = Bundle.main.path(forResource: key, ofType: nil)
+        self.audioFile = try! AVAudioFile(forReading: URL(fileURLWithPath: path!))
+
+        self.audioPlayerNode.scheduleSegment(self.audioFile, startingFrame: 0, frameCount: AVAudioFrameCount(self.audioFile.length), at: nil, completionHandler: self.completion)
+
+        self.audioEngine.connect(self.audioPlayerNode, to: self.audioUnitEQ, format: self.audioFile.processingFormat)
+        self.audioEngine.connect(self.audioUnitEQ, to: self.audioEngine.mainMixerNode, format: self.audioFile.processingFormat)
+
+        if !self.audioEngine.isRunning {
+            try! self.audioEngine.start()
+        }
+        let sampleRate = self.audioFile.processingFormat.sampleRate / 2
+        let format = self.audioEngine.mainMixerNode.outputFormat(forBus: 0)
+        self.audioEngine.mainMixerNode.installTap(onBus: 0, bufferSize: AVAudioFrameCount(sampleRate), format: format, block:{ (buffer: AVAudioPCMBuffer!, time: AVAudioTime!) -> Void in
+            // print(buffer.frameLength)
+        })
+        self.audioPlayerNode.pan = pan
+        self.audioPlayerNode.play()
     }
     
-    func clearAllData() {
-        equalizer = AVAudioUnitEQ()
-        audioEngine = AVAudioEngine()
-        audioPlayerNode = AVAudioPlayerNode()
+    func audioStop() {
+        self.isPlaying = false
+        self.audioPlayerNode.pause()
+        self.audioPlayerNode.stop()
+        self.audioEngine.stop()
+        self.audioEngine.mainMixerNode.removeTap(onBus: 0)
     }
-    
+
+    func completion() {
+        if self.isPlaying {
+            DispatchQueue.main.async {
+               // self.play(self.playButton)
+                if self.isPlaying {
+                    self.audioStop()
+                } else {
+                   // self.audioPlay()
+                }
+            }
+        }
+    }
 }
