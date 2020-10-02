@@ -37,11 +37,14 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     private let flutterMethodPlayMusicSpeaker = "playMusicSpeaker"
     private let flutterMethodPlayMusicMuted = "playMusicMuted"
     private let flutterMethodSetMusicVolume = "setMusicVolume"
-    private let flutterMethodSetMusicPaused = "playMusicPaused"
-    private let flutterMethodSetMusicResumed = "playMusicResumed"
-    private let flutterMethodSetMusicStop = "playMusicStop" 
-    
-    var registrar: FlutterPluginRegistrar? = nil   
+    private let flutterMethodGetMusicVolume = "getMusicVolume"
+    private let flutterMethodPlayMusicPaused = "playMusicPaused"
+    private let flutterMethodPlayMusicResumed = "playMusicResumed"
+    private let flutterMethodPlayMusicStop = "playMusicStop"
+     
+    var registrar: FlutterPluginRegistrar? = nil
+    var timer:Timer?
+    let VOLUME_DB : Float = 0.05
     
     public static func register(with registrar: FlutterPluginRegistrar) {
         let channel = FlutterMethodChannel(name: "audioset", binaryMessenger: registrar.messenger())
@@ -63,7 +66,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let isRepeat = arguments["isRepeat"] as! Bool
             self.playMusic(strResource: asset, type: type,musicFile: musicFile,isRepeat:isRepeat)
-            self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: [750.0,1500.0], pan: -1)
+           // self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: [750.0,1500.0], pan: -1)
         case flutterMethodPlayMusicFrequency:
             
             let arguments = call.arguments as! NSDictionary
@@ -73,7 +76,9 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let speakerSide =  arguments["speakerSide"] as! Float
             let frequency = arguments["frequency"] as! [Float]
-            self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: frequency, pan: speakerSide)
+            let isIncreasedVolume = arguments["isEveryFiveSecIncreseVolume"] as! Bool
+            let fType = arguments["filterType"] as! Int
+            self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: frequency, pan: speakerSide,isIncreasedVolume:isIncreasedVolume, filterType: fType)
 
         case flutterMethodPlayMusicSpeaker:
             let arguments = call.arguments as! NSDictionary
@@ -91,20 +96,22 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let musicVolume = arguments["volume"] as! Float
             self.setMusicVolume(player:musicFile == 1 ? player : player2,volume: musicVolume)
-
-        case flutterMethodSetMusicPaused:
+        case flutterMethodGetMusicVolume:
+            let volume = self.getMusicVolume()
+            result(volume)
+        case flutterMethodPlayMusicPaused:
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicPaused(player:musicFile == 1 ? player : player2)
             self.audioPause()
 
-        case flutterMethodSetMusicResumed:
+        case flutterMethodPlayMusicResumed:
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicResumed(player:musicFile == 1 ? player : player2)
             self.audioResume()
         
-        case flutterMethodSetMusicStop:
+        case flutterMethodPlayMusicStop:
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicStop(player:musicFile == 1 ? player : player2)
@@ -200,12 +207,26 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         if let player = player, player.isPlaying {
             player.stop()
         }
+        
+        if let timer = timer {
+            timer.invalidate()
+        }
     }
     
     func setMusicVolume(player:AVAudioPlayer?,volume: Float){
         if let player = player, player.isPlaying {
             player.volume = volume
         }
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            self.audioPlayerNode.volume = volume
+        }
+    }
+    
+    func getMusicVolume() -> Float {
+        if let player = player {
+            return player.volume
+        }
+        return 0.0
     }
 
 
@@ -258,17 +279,24 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
 //    }
     
     
-    func audioSetup(frequency:[Float]) {
+    func audioSetup(frequency:[Float],filterType:Int) {
 
        // let FREQUENCY: [Float] = [31, 62, 125, 250, 500, 1000, 2000, 4000, 8000, 16000]
-
+        
         self.audioEngine = AVAudioEngine.init()
         self.audioPlayerNode = AVAudioPlayerNode.init()
         self.audioUnitEQ = AVAudioUnitEQ(numberOfBands: frequency.count)
         self.audioEngine.attach(self.audioPlayerNode)
         self.audioEngine.attach(self.audioUnitEQ)
         for i in 0...(frequency.count - 1) {
-            self.audioUnitEQ.bands[i].filterType = .parametric
+            if filterType == -1 {
+                self.audioUnitEQ.bands[i].filterType = .lowPass
+            } else if filterType == 1{
+                self.audioUnitEQ.bands[i].filterType = .highPass
+            } else {
+                self.audioUnitEQ.bands[i].filterType = .parametric
+            }
+            
             self.audioUnitEQ.bands[i].frequency = frequency[i]
             self.audioUnitEQ.bands[i].bandwidth = 0.5 // half an octave
            // let eq = self.value(forKey: String(format: "eq%d", i)) as! UISlider
@@ -278,14 +306,14 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         self.audioUnitEQ.bypass = true
     }
 
-    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float) {
+    func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float,isIncreasedVolume:Bool,filterType:Int) {
         self.audioStop()
         self.isPlaying = true
-
+        
         try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
         try! AVAudioSession.sharedInstance().setActive(true)
 
-        self.audioSetup(frequency: frequency)
+        self.audioSetup(frequency: frequency, filterType: filterType)
 
         let key = registrar?.lookupKey(forAsset:  strResource)
         let path = Bundle.main.path(forResource: key, ofType: nil)
@@ -297,7 +325,12 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         self.audioEngine.connect(self.audioUnitEQ, to: self.audioEngine.mainMixerNode, format: self.audioFile.processingFormat)
 
         if !self.audioEngine.isRunning {
-            try! self.audioEngine.start()
+            do {
+                try self.audioEngine.start()
+            } catch {
+                print ("There is an issue with this code!")
+            }
+            
         }
         let sampleRate = self.audioFile.processingFormat.sampleRate / 2
         let format = self.audioEngine.mainMixerNode.outputFormat(forBus: 0)
@@ -306,11 +339,17 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         })
         self.audioPlayerNode.pan = pan
         self.audioPlayerNode.play()
+        if isIncreasedVolume {
+            self.startTimer()
+        } else {
+            self.stopTimer()
+        }
+        
     }
     
     func audioStop() {
         self.isPlaying = false
-        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+        if let audioPlayerNode = audioPlayerNode {
             self.audioPlayerNode.pause()
             self.audioPlayerNode.stop()
             self.audioEngine.stop()
@@ -344,5 +383,29 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
                 }
             }
         }
+    }
+    
+    @objc func increasedVolume() {
+        let volume = self.getMusicVolume() + VOLUME_DB
+        if let player = player, player.isPlaying {
+            player.volume = volume
+        }
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            self.audioPlayerNode.volume = volume
+        }
+    }
+    
+    func startTimer() {
+         if let timer = timer {
+                   timer.invalidate()
+         }
+        timer = Timer.scheduledTimer(timeInterval: 5, target: self, selector:#selector(self.increasedVolume), userInfo: nil, repeats: true)
+    }
+    
+    func stopTimer() {
+        if let timer = timer {
+            timer.invalidate()
+        }
+        
     }
 }
