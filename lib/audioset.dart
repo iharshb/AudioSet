@@ -39,8 +39,8 @@ class Audioset {
   }
 
   //1 min
-  void plaFreqMusic(
-      String assetPath, int musicFile, double speakerSide, List frequency) {
+  void plaFreqMusic(String assetPath, int musicFile, double speakerSide,
+      List frequency, bool isIncreasedVolume, int filterType) {
     _invokeNativeMethod(
       "playMusicFrerquency",
       arguments: <String, dynamic>{
@@ -48,15 +48,11 @@ class Audioset {
         type: "mp3",
         file: musicFile,
         spkSide: speakerSide,
-        "frequency": frequency
+        "frequency": frequency,
+        "isEveryFiveSecIncreseVolume": isIncreasedVolume,
+        "filterType": filterType,
       },
     );
-
-//    let asset =  arguments["asset"] as! String
-//    let type =  arguments["type"] as! String
-//    let musicFile = arguments["file"] as! Int
-//    let speakerSide =  arguments["speakerSide"] as! Float
-//    let frequency = arguments["frequency"] as! [Float]
   }
 
   void setMusicSide(double speakerSide, int musicFile) {
@@ -97,11 +93,17 @@ class Audioset {
     );
   }
 
-  void setVolume(int musicFile, int volume) {
+  void setVolume(int musicFile, double volume) {
     _invokeNativeMethod(
       nativeMethodSetVolume,
       arguments: <String, dynamic>{file: musicFile, vol: volume},
     );
+  }
+
+  Future<dynamic> getVolume(int musicFile) async {
+    Map<dynamic, dynamic> volume =
+        await _channel.invokeMethod('getMusicVolume');
+    return volume;
   }
 
   Future _invokeNativeMethod(String method,
