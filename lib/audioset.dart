@@ -9,7 +9,7 @@ class Audioset {
   static const nativeMethodSetVolume = "setMusicVolume";
   static const resumeMethod = "playMusicResumed";
   static const pauseMethod = "playMusicPaused";
-  static const stopMethod = "playMusicPaused";
+  static const stopMethod = "playMusicStop";
   static const muteMethod = "playMusicMuted";
 
   static const asset = "asset";

@@ -49,8 +49,9 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               text: "Play 1",
               onTap: () {
-                audioset.plaFreqMusic("assets/sounds/bear.mp3", 1, 1.0,
-                    [100.0, 500.0, 750.0, 1000, 0]);
+                audioset.stop(1);
+                audioset.plaFreqMusic(
+                    "assets/sounds/bear.mp3", 1, 0.0, [750], true, 1);
               },
             ),
 
@@ -58,10 +59,23 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               text: "Play 2",
               onTap: () {
-                audioset.plaMusic("assets/sounds/bear.mp3", 2);
+                audioset.stop(1);
+                audioset.plaFreqMusic(
+                    "assets/sounds/nat.mp3", 1, 0.0, [750], true, 1);
+
+                // audioset.plaMusic("assets/sounds/bear.mp3", 2);
               },
             ),
+            CustomButton(
+              text: "Play 3",
+              onTap: () {
+                audioset.stop(1);
+                audioset.plaFreqMusic(
+                    "assets/sounds/penguin.mp3", 1, 0.0, [750], true, 1);
 
+                // audioset.plaMusic("assets/sounds/bear.mp3", 2);
+              },
+            ),
             // And path pn get kre j che iOS ma
             CustomButton(
               text: "Play Bo Mp3",
