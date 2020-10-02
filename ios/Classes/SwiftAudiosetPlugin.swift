@@ -63,7 +63,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let musicFile = arguments["file"] as! Int
             let isRepeat = arguments["isRepeat"] as! Bool
             self.playMusic(strResource: asset, type: type,musicFile: musicFile,isRepeat:isRepeat)
-        
+            self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: [750.0,1500.0], pan: -1)
         case flutterMethodPlayMusicFrequency:
             
             let arguments = call.arguments as! NSDictionary
@@ -96,16 +96,19 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicPaused(player:musicFile == 1 ? player : player2)
+            self.audioPause()
 
         case flutterMethodSetMusicResumed:
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicResumed(player:musicFile == 1 ? player : player2)
+            self.audioResume()
         
         case flutterMethodSetMusicStop:
             let arguments = call.arguments as! NSDictionary
             let musicFile = arguments["file"] as! Int
             self.playMusicStop(player:musicFile == 1 ? player : player2)
+            self.audioStop()
 
         default:
             print ("Unknown method called on Native Audio Player channel.")
@@ -157,6 +160,10 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
         if let player = player, player.isPlaying {
                 player.pan = speakerSide
         }
+        
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            audioPlayerNode.pan = speakerSide
+        }
     }
 
     func playMusicMuted(player:AVAudioPlayer?){
@@ -165,6 +172,14 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
                 player.volume = 1.0
             } else {
                 player.volume = 0.0
+            }
+        }
+        
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            if audioPlayerNode.volume == 0.0 {
+                audioPlayerNode.volume = 1.0
+            } else {
+                audioPlayerNode.volume = 0.0
             }
         }
     }
@@ -176,7 +191,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     }
 
     func playMusicResumed(player:AVAudioPlayer?){
-        if let player = player,player.isPlaying {
+        if let player = player {
                 player.play()
         }
     }
@@ -264,7 +279,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     }
 
     func playMusicWithFrequency(strResource:String, type:String,number:Int,frequency:[Float],pan:Float) {
-
+        self.audioStop()
         self.isPlaying = true
 
         try! AVAudioSession.sharedInstance().setCategory(AVAudioSession.Category.playback)
@@ -295,20 +310,37 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     
     func audioStop() {
         self.isPlaying = false
-        self.audioPlayerNode.pause()
-        self.audioPlayerNode.stop()
-        self.audioEngine.stop()
-        self.audioEngine.mainMixerNode.removeTap(onBus: 0)
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            self.audioPlayerNode.pause()
+            self.audioPlayerNode.stop()
+            self.audioEngine.stop()
+            self.audioEngine.mainMixerNode.removeTap(onBus: 0)
+        }
+        
+    }
+    
+    func audioPause() {
+        if let audioPlayerNode = audioPlayerNode,audioPlayerNode.isPlaying {
+            self.audioPlayerNode.pause()
+        }
+        
+    }
+    
+    func audioResume() {
+        if let audioPlayerNode = audioPlayerNode {
+            self.audioPlayerNode.play()
+        }
+        
     }
 
     func completion() {
         if self.isPlaying {
             DispatchQueue.main.async {
-               // self.play(self.playButton)
+                // self.play(self.playButton)
                 if self.isPlaying {
                     self.audioStop()
                 } else {
-                   // self.audioPlay()
+                    // self.audioPlay()
                 }
             }
         }
