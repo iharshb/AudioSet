@@ -40,7 +40,7 @@ class Audioset {
 
   //1 min
   void plaFreqMusic(String assetPath, int musicFile, double speakerSide,
-      List frequency, bool isIncreasedVolume, int filterType) {
+      double frequency, bool isIncreasedVolume, int filterType) {
     _invokeNativeMethod(
       "playMusicFrerquency",
       arguments: <String, dynamic>{
