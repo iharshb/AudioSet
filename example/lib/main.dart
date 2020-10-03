@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 audioset.stop(1);
                 audioset.plaFreqMusic(
-                    "assets/sounds/bear.mp3", 1, 0.0, 750.0, true, 1);
+                    "assets/sounds/bear.mp3", 1, 0.0, [750.0], true, 1);
               },
             ),
 
@@ -61,17 +61,21 @@ class _HomePageState extends State<HomePage> {
               onTap: () {
                 audioset.stop(1);
                 audioset.plaFreqMusic(
-                    "assets/sounds/nat.mp3", 1, 0.0, 750.0, true, 1);
-
+                    "assets/sounds/nat.mp3", 1, 0.0, [750.0], true, 1);
+                audioset.plaFreqMusic(
+                    "assets/sounds/penguin.mp3", 2, 0.0, [750.0], false, 1);
                 // audioset.plaMusic("assets/sounds/bear.mp3", 2);
               },
             ),
             CustomButton(
               text: "Play 3",
               onTap: () {
-                audioset.stop(1);
+                // audioset.stop(1);
+
+//                audioset.plaFreqMusic("assets/sounds/nat.mp3", 1, 0.0, [750.0], false, 1);
+                audioset.plaMusic("assets/sounds/nat.mp3", 1);
                 audioset.plaFreqMusic(
-                    "assets/sounds/penguin.mp3", 1, 0.0, 750.0, false, 1);
+                    "assets/sounds/penguin.mp3", 2, 0.0, [750.0], false, 1);
 
                 // audioset.plaMusic("assets/sounds/bear.mp3", 2);
               },
