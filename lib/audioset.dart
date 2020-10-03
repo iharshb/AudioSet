@@ -26,13 +26,14 @@ class Audioset {
     return version;
   }
 
-  void plaMusic(String assetPath, int musicFile) {
+  void plaMusic(String assetPath, int musicFile, double speakerSide) {
     _invokeNativeMethod(
       methodPlay,
       arguments: <String, dynamic>{
         asset: assetPath,
         type: "mp3",
         file: musicFile,
+        spkSide: speakerSide,
         isRepeat: true,
       },
     );

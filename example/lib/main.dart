@@ -70,12 +70,9 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               text: "Play 3",
               onTap: () {
-                // audioset.stop(1);
-
-//                audioset.plaFreqMusic("assets/sounds/nat.mp3", 1, 0.0, [750.0], false, 1);
-                audioset.plaMusic("assets/sounds/nat.mp3", 1);
+                audioset.plaMusic("assets/sounds/nat.mp3", 1, 0.0);
                 audioset.plaFreqMusic(
-                    "assets/sounds/penguin.mp3", 2, 0.0, [750.0], false, 1);
+                    "assets/sounds/penguin.mp3", 2, 0.0, [750.0], true, 1);
 
                 // audioset.plaMusic("assets/sounds/bear.mp3", 2);
               },
@@ -84,8 +81,8 @@ class _HomePageState extends State<HomePage> {
             CustomButton(
               text: "Play Bo Mp3",
               onTap: () {
-                audioset.plaMusic("assets/sounds/bear.mp3", 1);
-                audioset.plaMusic("assets/sounds/nat.mp3", 2);
+                audioset.plaMusic("assets/sounds/bear.mp3", 1, -1.0);
+                audioset.plaMusic("assets/sounds/nat.mp3", 2, 1.0);
               },
             ),
 

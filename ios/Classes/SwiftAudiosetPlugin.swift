@@ -65,7 +65,8 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
             let type =  arguments["type"] as! String
             let musicFile = arguments["file"] as! Int
             let isRepeat = arguments["isRepeat"] as! Bool
-            self.playMusic(strResource: asset, type: type,musicFile: musicFile,isRepeat:isRepeat)
+            let speakerSide =  arguments["speakerSide"] as! Float
+            self.playMusic(strResource: asset, type: type,musicFile: musicFile,isRepeat:isRepeat,pan: speakerSide)
            // self.playMusicWithFrequency(strResource: asset, type: type, number: musicFile, frequency: [750.0,1500.0], pan: -1)
         case flutterMethodPlayMusicFrequency:
             
@@ -123,7 +124,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
     }
     
 
-    func playMusic(strResource:String, type:String,musicFile:Int,isRepeat:Bool){
+    func playMusic(strResource:String, type:String,musicFile:Int,isRepeat:Bool,pan:Float){
         let key = registrar?.lookupKey(forAsset:  strResource)
         if let path = Bundle.main.path(forResource: key, ofType : nil) {
             let url = URL(fileURLWithPath : path)
@@ -138,6 +139,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
                     } else {
                         player?.numberOfLoops = 1
                     }
+                    player?.pan = pan
                     player?.play()
                 } else {
                     if let player2 = player2, player2.isPlaying {
@@ -149,6 +151,7 @@ public class SwiftAudiosetPlugin: NSObject, FlutterPlugin {
                     } else {
                         player2?.numberOfLoops = 1
                     }
+                    player2?.pan = pan
                     player2?.play()
                 }
 
